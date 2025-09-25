@@ -1,0 +1,7 @@
+Caso 3: Detección de un Keylogger
+
+Escenario: Un archivo sospechoso parece ser un Keylogger que registra las pulsaciones del teclado. Se ha observado que contiene un patrón de inicialización por lo tanto el equipo SOC ha decidido actuar
+y de esta forma verificar la ubicacion de este archivo por medio de una regla YARA para detectar la ubicacion exacta del Keylogger
+
+
+Instrucciones crear una carperta(directorio) llamado doc-importantes

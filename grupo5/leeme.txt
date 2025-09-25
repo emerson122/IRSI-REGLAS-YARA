@@ -1,0 +1,5 @@
+Caso 6: Detección de una Shell Inversa
+
+Escenario: Se ha observado un proceso que intenta establecer una conexión con un servidor externo usando una shell inversa.un analista del SOC-Grupo5 observa fuera de hora una alerta generada por el proxy corporativo: un host interno está intentando establecer una conexión saliente hacia una IP privada del laboratorio (192.168.1.100) en el puerto 4444. La alerta proviene de tráfico no habitual para ese equipo —un equipo de desarrollo que normalmente no inicia conexiones a direcciones internas de ese rango— y muestra un patrón de bytes en el payload que sugiere texto ASCII claro.
+
+Al investigar el endpoint con la telemetría del EDR, el analista encuentra un binario llamado nosoy_malo.dll en el directorio temporal del usuario. 

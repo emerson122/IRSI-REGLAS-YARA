@@ -1,0 +1,7 @@
+Caso Grupo 1: Detección de un Phishing de Contraseñas
+
+Escenario: Se ha detectado un archivo que simula ser un documento oficial, 
+pero su objetivo es robar credenciales el cual ha sido enviado al gerente 
+el equipo SOC grupo 1 se ha percartado del documento y intento avisar al gerente
+sin embargo no obtuvieron respuesta por parte de el, por lo que el soc decidio crear una regla YARA 
+para encontrar el archivo en su equipo antes que el gerente lo habra por accidente.

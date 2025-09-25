@@ -1,0 +1,3 @@
+Caso grupo 2: Cadenas de un Ransomware
+
+Escenario: Un nuevo ransomware está en las primeras etapas de propagación. Los analistas de inteligencia del SOC grupo 2 han identificado cadenas de texto únicas que deja en los archivos afectados han decidido crear una regla YARA para ejecutarla en todos los equipos de la empresa y asi garantizar que este ransomware no afecte a la empresa.

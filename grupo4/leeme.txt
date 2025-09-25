@@ -1,0 +1,7 @@
+Caso 4: Amenaza Persistente (APT)
+
+Escenario: Un grupo de hackers patrocinado por un estado usa un backdoor con un nombre de archivo inusual y una cadena de comando codificada en base64 el equipo SOC 
+se anticipo a este ataque y realizo una regla YARA para detectar rapidamente este archivo en sus equipos
+
+
+Notas: la cadena base64 decodifica a "All your base are belong to us". Es una pista inofensiva
