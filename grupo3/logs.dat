@@ -1,4 +1,4 @@
-# logs.dat (simulado) - entradas de teclado capturadas
+# logs.dat  - entradas de teclado capturadas
 [2025-09-24 09:12:43] focused_window: "https://soc.grupo3.local/login"
 [2025-09-24 09:12:45] keystrokes: "grupo3.admin"
 [2025-09-24 09:12:52] keystrokes: "MiP@ssw0rdSoc2025"
@@ -8,6 +8,6 @@
 [2025-09-24 09:17:55] focused_window: "File Explorer - C:\\Users\\empleado\\Documents"
 [2025-09-24 09:18:03] keystrokes: "Confidencial-Plan-2026.docx"
 [2025-09-24 10:02:11] system_event: "scheduled upload triggered"
-[2025-09-24 10:02:12] exfiltration_record (SIMULADO): "logs.dat -> POST to 198.51.100.23:443, bytes=20480, protocol=HTTPS"
-[2025-09-24 10:02:13] exfiltration_record (SIMULADO): "status=200 OK (simulado)"
+[2025-09-24 10:02:12] exfiltration_record : "logs.dat -> POST to 198.51.100.23:443, bytes=20480, protocol=HTTPS"
+[2025-09-24 10:02:13] exfiltration_record : "status=200 OK "
 [2025-09-24 10:03:00] note: "desvio de informacion inminete"
