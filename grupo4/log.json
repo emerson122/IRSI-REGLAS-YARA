@@ -1,0 +1,211 @@
+{
+  "incident_id": "STC-20250924-KL-4001",
+  "incident_title": "Proceso sospechoso 'svchost.exe' en C:\\Users\\Public — keylogger y exfiltración a 198.51.100.23",
+  "severity": "Critical",
+  "summary": "Se detecta ejecución de un binario 'svchost.exe' ubicado en C:\\Users\\Public con argumentos ofuscados en Base64, captura de pulsaciones de teclado (logs.dat) que incluyen credenciales administrativas, y una subida programada vía HTTPS a 198.51.100.23:443. El patrón es consistente con un keylogger con funcionalidad de persistencia y exfiltración.",
+  "first_seen_utc": "2025-09-24T09:12:43Z",
+  "last_seen_utc": "2025-09-24T10:03:00Z",
+  "hosts": [
+    {
+      "host_id": "HOST-GRUPO4-WS1",
+      "hostname": "HOST-GRUPO4-WS1",
+      "host_ip": "10.0.6.33",
+      "os": "Windows 10 Enterprise",
+      "owner": "empleado",
+      "domain": "grupo4.local"
+    }
+  ],
+  "attack_chain_mitre": [
+    { "tactic": "Credential Access", "technique": "Input Capture (T1056.001)" },
+    { "tactic": "Persistence", "technique": "Create or Modify System Process (T1543)" },
+    { "tactic": "Persistence", "technique": "Scheduled Task (T1053.005)" },
+    { "tactic": "Command and Control", "technique": "Application Layer Protocol: Web Protocols (T1071.001)" },
+    { "tactic": "Exfiltration", "technique": "Exfiltration Over HTTPS (T1041)" },
+    { "tactic": "Defense Evasion", "technique": "Obfuscated Files or Information (T1027)" }
+  ],
+  "iocs": {
+    "suspicious_process": {
+      "command_line": "C:\\Users\\Public\\svchost.exe -load QWxsIHlvdXIgYmFzZSBhcmUgYmVs...",
+      "base64_argument": "QWxsIHlvdXIgYmFzZSBhcmUgYmVs",
+      "base64_decoded_preview": "All your base are bel",
+      "file_path": "C:\\Users\\Public\\svchost.exe",
+      "sha256": "c0ffee1234567890abcdef1234567890abcdef1234567890abcdef1234567890"
+    },
+    "logs_file": {
+      "filename": "logs.dat",
+      "file_path": "C:\\WINDOWS\\TEMP\\logs.dat",
+      "sha256": "dd11ee22ff33aa44bb55cc66dd77ee88ff99aa00bb11cc22dd33ee44ff55aa66",
+      "size_bytes": 20480
+    },
+    "c2": {
+      "ip": "198.51.100.23",
+      "port": 443,
+      "proto": "HTTPS",
+      "first_seen": "2025-09-24T10:02:12Z"
+    },
+    "observed_usernames": [
+      "admin.grupo4"
+    ],
+    "observed_passwords": [
+      "M1P@ssw0rdSocGrupo4"
+    ]
+  },
+  "timeline": [
+    {
+      "event_id": "STC-20250924-KL4-01",
+      "timestamp_utc": "2025-09-24T09:12:43Z",
+      "source_host": "HOST-GRUPO4-WS1",
+      "process": "svchost.exe (C:\\Users\\Public)",
+      "severity": "High",
+      "category": "Process Launch",
+      "description": "Ejecución de 'C:\\Users\\Public\\svchost.exe' con argumento '-load QWxsIHlvdXIgYmFzZSBhcmUgYmVs...'. Argumento en Base64 detectado.",
+      "evidence_snippet": "C:\\Users\\Public\\svchost.exe -load QWxsIHlvdXIgYmFzZSBhcmUgYmVs...",
+      "analysis_note": "El binario se ejecuta desde carpeta no estándar (Users\\Public) y presenta argumento ofuscado; indicio de persistencia fraudulenta.",
+      "mitre": ["T1543", "T1027"],
+      "action_taken": "Registro de línea de comando y captura de binario para análisis AV/EDR."
+    },
+    {
+      "event_id": "STC-20250924-KL4-02",
+      "timestamp_utc": "2025-09-24T09:12:45Z",
+      "source_host": "HOST-GRUPO4-WS1",
+      "process": "nosoyunkeylogger-like (hook)",
+      "severity": "Critical",
+      "category": "Input Capture",
+      "description": "Focused window detectado: 'https://soc.grupo4.local/login' y capture de nombre de usuario.",
+      "evidence_snippet": "[2025-09-24 09:12:43] focused_window: \"https://soc.grupo4.local/login\"; [2025-09-24 09:12:45] keystrokes: \"admin.grupo4\"",
+      "mitre": ["T1056.001"],
+      "action_taken": "Credencial de usuario marcada como comprometida; recomendación de bloqueo y cambio."
+    },
+    {
+      "event_id": "STC-20250924-KL4-03",
+      "timestamp_utc": "2025-09-24T09:12:52Z",
+      "source_host": "HOST-GRUPO4-WS1",
+      "process": "keyboard hook",
+      "severity": "Critical",
+      "category": "Credential Theft",
+      "description": "Captura de contraseña en claro desde el teclado.",
+      "evidence_snippet": "[2025-09-24 09:12:52] keystrokes: \"M1P@ssw0rdSocGrupo4\"",
+      "mitre": ["T1056.001"],
+      "action_taken": "Cuenta 'admin.grupo4' temporalmente deshabilitada; notificar usuario."
+    },
+    {
+      "event_id": "STC-20250924-KL4-04",
+      "timestamp_utc": "2025-09-24T09:12:53Z",
+      "source_host": "HOST-GRUPO4-WS1",
+      "process": "browser",
+      "severity": "Informational",
+      "category": "User Activity",
+      "description": "Acción de envío de formulario de login detectada.",
+      "evidence_snippet": "[2025-09-24 09:12:53] action: \"submit_login\"",
+      "mitre": [],
+      "action_taken": "Correlado con captura anterior."
+    },
+    {
+      "event_id": "STC-20250924-KL4-05",
+      "timestamp_utc": "2025-09-24T09:15:10Z",
+      "source_host": "HOST-GRUPO4-WS1",
+      "process": "OUTLOOK.EXE",
+      "severity": "Medium",
+      "category": "Data Discovery",
+      "description": "Usuario redacta correo que menciona documento confidencial a adjuntar.",
+      "evidence_snippet": "[2025-09-24 09:15:19] keystrokes: \"Correo enviado a cliente: adjunto presupuesto SOC\"",
+      "mitre": ["T1213"],
+      "action_taken": "Revisión de elementos adjuntos enviados por el usuario."
+    },
+    {
+      "event_id": "STC-20250924-KL4-06",
+      "timestamp_utc": "2025-09-24T09:17:55Z",
+      "source_host": "HOST-GRUPO4-WS1",
+      "process": "explorer.exe",
+      "severity": "Medium",
+      "category": "Discovery / Collection",
+      "description": "Apertura de carpeta Documents y selección de archivo sensible.",
+      "evidence_snippet": "[2025-09-24 09:18:03] keystrokes: \"Confidencial-Plan-2026.docx\"",
+      "mitre": ["T1083"],
+      "action_taken": "Hash del documento almacenado para seguimiento."
+    },
+    {
+      "event_id": "STC-20250924-KL4-07",
+      "timestamp_utc": "2025-09-24T10:02:11Z",
+      "source_host": "HOST-GRUPO4-WS1",
+      "process": "scheduled uploader",
+      "severity": "Critical",
+      "category": "Exfiltration Preparation",
+      "description": "Evento del sistema: 'scheduled upload triggered' — inicia tarea programada para subir 'logs.dat'.",
+      "evidence_snippet": "[2025-09-24 10:02:11] system_event: \"scheduled upload triggered\"",
+      "mitre": ["T1053.005"],
+      "action_taken": "Tarea detectada; programador detenido y se tomaron snapshots del scheduler."
+    },
+    {
+      "event_id": "STC-20250924-KL4-08",
+      "timestamp_utc": "2025-09-24T10:02:12Z",
+      "source_host": "HOST-GRUPO4-WS1",
+      "destination_ip": "198.51.100.23",
+      "process": "HttpClient (HTTPS POST)",
+      "severity": "Critical",
+      "category": "Exfiltration",
+      "description": "Registro simulado de exfiltración: 'logs.dat' enviado por POST a 198.51.100.23:443 (~20 KB).",
+      "evidence_snippet": "[2025-09-24 10:02:12] exfiltration_record (SIMULADO): \"logs.dat -> POST to 198.51.100.23:443, bytes=20480, protocol=HTTPS\"",
+      "network_observed": {
+        "method": "POST",
+        "uri": "/upload",
+        "content_length": 20480,
+        "user_agent": "Mozilla/5.0 (compatible; KeyExfil/1.0)",
+        "tls_cert_cn": "upload.example-host.net"
+      },
+      "mitre": ["T1041", "T1071.001"],
+      "action_taken": "Bloqueo del destino a nivel FW; pcap capturado."
+    },
+    {
+      "event_id": "STC-20250924-KL4-09",
+      "timestamp_utc": "2025-09-24T10:02:13Z",
+      "source_host": "HOST-GRUPO4-WS1",
+      "process": "HttpClient",
+      "severity": "Informational",
+      "category": "Exfiltration",
+      "description": "Respuesta simulada 200 OK desde C2 — transferencia completada (simulado).",
+      "evidence_snippet": "[2025-09-24 10:02:13] exfiltration_record (SIMULADO): \"status=200 OK (simulado)\"",
+      "mitre": ["T1041"],
+      "action_taken": "Payload guardado, se inició proceso de descifrado offline."
+    },
+    {
+      "event_id": "STC-20250924-KL4-10",
+      "timestamp_utc": "2025-09-24T10:03:00Z",
+      "source_host": "HOST-GRUPO4-WS1",
+      "process": "svchost.exe (malware)",
+      "severity": "High",
+      "category": "Behavioral Indicator",
+      "description": "Nota en logs: 'desvio de informacion inminete' — indica intención de exfiltración adicional.",
+      "evidence_snippet": "[2025-09-24 10:03:00] note: \"desvio de informacion inminete\"",
+      "mitre": ["T1071"],
+      "action_taken": "Host puesto en cuarentena de red; caso escalado a CSIRT."
+    }
+  ],
+  "evidence": {
+    "command_line_capture": "C:\\Users\\Public\\svchost.exe -load QWxsIHlvdXIgYmFzZSBhcmUgYmVs...",
+    "base64_decoded_full_preview": "All your base are belong to us (truncated preview)",
+    "logs_dat_preview": [
+      "[2025-09-24 09:12:43] focused_window: \"https://soc.grupo4.local/login\"",
+      "[2025-09-24 09:12:45] keystrokes: \"admin.grupo4\"",
+      "[2025-09-24 09:12:52] keystrokes: \"M1P@ssw0rdSocGrupo4\"",
+      "[2025-09-24 09:12:53] action: \"submit_login\"",
+      "[2025-09-24 09:15:10] focused_window: \"C:\\\\Program Files\\\\Outlook\\\\OUTLOOK.EXE\"",
+      "[2025-09-24 09:15:19] keystrokes: \"Correo enviado a cliente: adjunto presupuesto SOC\"",
+      "[2025-09-24 09:17:55] focused_window: \"File Explorer - C:\\\\Users\\\\empleado\\\\Documents\"",
+      "[2025-09-24 09:18:03] keystrokes: \"Confidencial-Plan-2026.docx\"",
+      "[2025-09-24 10:02:11] system_event: \"scheduled upload triggered\"",
+      "[2025-09-24 10:02:12] exfiltration_record (SIMULADO): \"logs.dat -> POST to 198.51.100.23:443, bytes=20480, protocol=HTTPS\"",
+      "[2025-09-24 10:02:13] exfiltration_record (SIMULADO): \"status=200 OK (simulado)\"",
+      "[2025-09-24 10:03:00] note: \"desvio de informacion inminete\""
+    ],
+    "file_hashes": {
+      "C:\\Users\\Public\\svchost.exe": "c0ffee1234567890abcdef1234567890abcdef1234567890abcdef1234567890",
+      "logs.dat": "dd11ee22ff33aa44bb55cc66dd77ee88ff99aa00bb11cc22dd33ee44ff55aa66",
+      "Confidencial-Plan-2026.docx": "bb22cc33dd44ee55ff6677889900112233445566778899aabbccddeeff00112233"
+    },
+    "network_capture_reference": "pcap_STC-20250924-KL4-4001.pcap",
+    "memory_image_reference": "mem_host-grupo4-ws1_20250924_1005.dmp"
+  },
+
+  "notes": "La presencia de un ejecutable llamado 'svchost.exe' en C:\\Users\\Public con argumentos Base64, la captura de credenciales en texto plano y la transmisión programada a 198.51.100.23 indican un compromiso real. Se observa patrón idéntico al incidente previo (misma IP C2 y comportamiento de exfiltración), por lo que se recomienda tratar como campaña y escalar a nivel de TI global para bloqueo y comunicación interna."
+}

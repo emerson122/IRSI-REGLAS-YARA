@@ -1,0 +1,211 @@
+{
+  "incident_id": "STC-20250924-KL-3001",
+  "incident_title": "Keylogger 'nosoyunkeylogger.dll' — captura de credenciales y exfiltración",
+  "summary": "Se detecta DLL maliciosa 'nosoyunkeylogger.dll' instalada en HOST-SOC-01 que recoge pulsaciones de teclado (logs.dat), captura credenciales de administrador y archivos sensibles, y realiza una subida programada vía HTTPS a 198.51.100.23:443. Evidencia contenida: fragmentos de logs.dat que muestran credenciales y nombres de documentos confidenciales.",
+  "first_seen_utc": "2025-09-24T09:12:43Z",
+  "last_seen_utc": "2025-09-24T10:03:00Z",
+  "hosts": [
+    {
+      "host_id": "HOST-SOC-01",
+      "hostname": "HOST-SOC-01",
+      "host_ip": "10.0.5.22",
+      "os": "Windows Server 2019",
+      "owner": "empleado",
+      "domain": "grupo3.local"
+    }
+  ],
+  "attack_chain_mitre": [
+    { "tactic": "Credential Access", "technique": "Input Capture (T1056.001)" },
+    { "tactic": "Persistence", "technique": "DLL Search Order Hijacking (T1031)" },
+    { "tactic": "Exfiltration", "technique": "Exfiltration Over C2 Channel (T1041)" },
+    { "tactic": "Defense Evasion", "technique": "Obfuscated Files or Information (T1027)" }
+  ],
+  "iocs": {
+    "malicious_file": {
+      "filename": "nosoyunkeylogger.dll",
+      "file_path": "C:\\Windows\\System32\\drivers\\nosoyunkeylogger.dll",
+      "sha256": "f1e2d3c4b5a6978877665544332211aaff00bbccddeeff112233445566778899"
+    },
+    "logs_file": {
+      "filename": "logs.dat",
+      "file_path": "C:\\WINDOWS\\TEMP\\logs.dat",
+      "sha256": "aa11bb22cc33dd44ee55ff6677889900aabbccddeeff00112233445566778899",
+      "size_bytes": 20480
+    },
+    "c2": {
+      "ip": "198.51.100.23",
+      "port": 443,
+      "proto": "HTTPS",
+      "asn": "AS64496 ExampleHosting",
+      "country": "Netherlands",
+      "first_seen": "2025-09-24T10:02:12Z"
+    },
+    "suspicious_processes": [
+      "rundll32.exe",
+      "svchost.exe (child process launching DLL)",
+      "unknown_service_kb.exe"
+    ]
+  },
+  "timeline": [
+    {
+      "event_id": "STC-20250924-KL-01",
+      "timestamp_utc": "2025-09-24T09:12:43Z",
+      "source_host": "HOST-SOC-01",
+      "process": "nosoyunkeylogger.dll (hook)",
+      "severity": "High",
+      "category": "Input Capture",
+      "description": "Focused window detectado: 'https://soc.grupo3.local/login'. Hook de teclado activo capturando entrada dentro del navegador.",
+      "evidence_snippet": "[2025-09-24 09:12:43] focused_window: \"https://soc.grupo3.local/login\"",
+      "mitre": ["T1056.001"],
+      "action_taken": "Registro y snapshot de proceso para análisis."
+    },
+    {
+      "event_id": "STC-20250924-KL-02",
+      "timestamp_utc": "2025-09-24T09:12:45Z",
+      "source_host": "HOST-SOC-01",
+      "process": "nosoyunkeylogger.dll (hook)",
+      "category": "Credential Theft",
+      "description": "Captura de credencial: nombre de usuario escrito en campo de login.",
+      "evidence_snippet": "[2025-09-24 09:12:45] keystrokes: \"grupo3.admin\"",
+      "mitre": ["T1056.001"],
+      "action_taken": "Credencial marcada como comprometida. Recomendado reset de contraseña."
+    },
+    {
+      "event_id": "STC-20250924-KL-03",
+      "timestamp_utc": "2025-09-24T09:12:52Z",
+      "source_host": "HOST-SOC-01",
+      "process": "nosoyunkeylogger.dll (hook)",
+      "category": "Credential Theft",
+      "description": "Captura de contraseña administrativa completa.",
+      "evidence_snippet": "[2025-09-24 09:12:52] keystrokes: \"MiP@ssw0rdSoc2025\"",
+      "observation": "Contraseña con complejidad aparente; sin embargo, ahora comprometida.",
+      "mitre": ["T1056.001"],
+      "action_taken": "Cuenta 'grupo3.admin' bloqueada temporalmente y credenciales solicitadas a reset inmediato."
+    },
+    {
+      "event_id": "STC-20250924-KL-04",
+      "timestamp_utc": "2025-09-24T09:12:53Z",
+      "source_host": "HOST-SOC-01",
+      "process": "browser (submit)",
+      "severity": "Informational",
+      "category": "User Activity",
+      "description": "Acción de submit en la página de login detectada inmediatamente después de la captura de credenciales.",
+      "evidence_snippet": "[2025-09-24 09:12:53] action: \"submit_login\"",
+      "mitre": [],
+      "action_taken": "Correlado con captura de credenciales."
+    },
+    {
+      "event_id": "STC-20250924-KL-05",
+      "timestamp_utc": "2025-09-24T09:15:10Z",
+      "source_host": "HOST-SOC-01",
+      "process": "OUTLOOK.EXE",
+      "severity": "Medium",
+      "category": "Data Discovery",
+      "description": "El usuario cambia a Outlook y redacta correo con mención de documento adjunto.",
+      "evidence_snippet": "[2025-09-24 09:15:19] keystrokes: \"Correo enviado a cliente: adjunto presupuesto SOC\"",
+      "mitre": ["T1213 (Data from Information Repositories)"],
+      "action_taken": "Se revisan logs de correo para detectar envío de adjuntos."
+    },
+    {
+      "event_id": "STC-20250924-KL-06",
+      "timestamp_utc": "2025-09-24T09:17:55Z",
+      "source_host": "HOST-SOC-01",
+      "process": "explorer.exe",
+      "severity": "Medium",
+      "category": "Discovery",
+      "description": "Explorador de archivos abierto en carpeta Documents. Archivo objetivo observado.",
+      "evidence_snippet": "[2025-09-24 09:18:03] keystrokes: \"Confidencial-Plan-2026.docx\"",
+      "mitre": ["T1083"],
+      "action_taken": "Se marca archivo como de interés y se crea hash para seguimiento."
+    },
+    {
+      "event_id": "STC-20250924-KL-07",
+      "timestamp_utc": "2025-09-24T10:02:11Z",
+      "source_host": "HOST-SOC-01",
+      "process": "nosoyunkeylogger.dll (scheduled uploader)",
+      "severity": "Critical",
+      "category": "Exfiltration Preparation",
+      "description": "Evento de sistema: 'scheduled upload triggered'. Comienzo de tarea programada para enviar logs.dat al C2.",
+      "evidence_snippet": "[2025-09-24 10:02:11] system_event: \"scheduled upload triggered\"",
+      "mitre": ["T1059.008", "T1041"],
+      "action_taken": "Conexiones salientes del host bloqueadas temporalmente por firewall interno."
+    },
+    {
+      "event_id": "STC-20250924-KL-08",
+      "timestamp_utc": "2025-09-24T10:02:12Z",
+      "source_host": "HOST-SOC-01",
+      "destination_ip": "198.51.100.23",
+      "process": "HttpClient (HTTPS POST)",
+      "severity": "Critical",
+      "category": "Exfiltration",
+      "description": "Registro de exfiltración: 'logs.dat' enviado por POST a 198.51.100.23:443. Tamaño total ~20 KB. Respuesta HTTP 200 OK (simulado).",
+      "evidence_snippet": "[2025-09-24 10:02:12] exfiltration_record (SIMULADO): \"logs.dat -> POST to 198.51.100.23:443, bytes=20480, protocol=HTTPS\"",
+      "network_observed": {
+        "method": "POST",
+        "uri": "/upload",
+        "content_length": 20480,
+        "user_agent": "Mozilla/5.0 (compatible; KeyExfil/1.0)",
+        "tls_cert_cn": "upload.example-host.net"
+      },
+      "mitre": ["T1041"],
+      "action_taken": "Sesión bloqueada; paquete capturado para análisis. C2 IP añadida a bloqueo y lista de IOC."
+    },
+    {
+      "event_id": "STC-20250924-KL-09",
+      "timestamp_utc": "2025-09-24T10:02:13Z",
+      "source_host": "HOST-SOC-01",
+      "process": "HttpClient",
+      "severity": "Informational",
+      "category": "Exfiltration",
+      "description": "Respuesta simulada desde C2: status=200 OK (simulado). Indica transferencia completa.",
+      "evidence_snippet": "[2025-09-24 10:02:13] exfiltration_record (SIMULADO): \"status=200 OK (simulado)\"",
+      "mitre": ["T1041"],
+      "action_taken": "Paquetes relevantes salvados, incluido payload cifrado para decodificación offline."
+    },
+    {
+      "event_id": "STC-20250924-KL-10",
+      "timestamp_utc": "2025-09-24T10:03:00Z",
+      "source_host": "HOST-SOC-01",
+      "process": "nosoyunkeylogger.dll",
+      "category": "Behavioral Indicator",
+      "description": "Nota detectada en logs: 'desvio de informacion inminete' (indicador de intención de exfiltración adicional).",
+      "evidence_snippet": "[2025-09-24 10:03:00] note: \"desvio de informacion inminete\"",
+      "mitre": ["T1071"],
+      "action_taken": "Caso elevado a CSIRT; host puesto en cuarentena de red."
+    },
+    {
+      "event_id": "STC-20250924-KL-11",
+      "timestamp_utc": "2025-09-24T10:05:00Z",
+      "source_host": "EDR01",
+      "process": "Threat Hunting",
+      "category": "Forensics",
+      "description": "Detección automática: DLL no firmada cargada por proceso 'rundll32.exe' y registro de hook de teclado. Imágenes de memoria capturadas para análisis.",
+      "evidence_snippet": "ProcessCreate: rundll32.exe -> LoadLibrary nosoyunkeylogger.dll",
+      "mitre": ["T1055", "T1056.001"],
+      "action_taken": "Proceso terminando; DLL removida temporalmente; imagen forense generada."
+    }
+  ],
+  "evidence": {
+    "logs_dat_full_preview": [
+      "[2025-09-24 09:12:43] focused_window: \"https://soc.grupo3.local/login\"",
+      "[2025-09-24 09:12:45] keystrokes: \"grupo3.admin\"",
+      "[2025-09-24 09:12:52] keystrokes: \"MiP@ssw0rdSoc2025\"",
+      "[2025-09-24 09:12:53] action: \"submit_login\"",
+      "[2025-09-24 09:15:10] focused_window: \"C:\\\\Program Files\\\\Outlook\\\\OUTLOOK.EXE\"",
+      "[2025-09-24 09:15:19] keystrokes: \"Correo enviado a cliente: adjunto presupuesto SOC\"",
+      "[2025-09-24 09:17:55] focused_window: \"File Explorer - C:\\\\Users\\\\empleado\\\\Documents\"",
+      "[2025-09-24 09:18:03] keystrokes: \"Confidencial-Plan-2026.docx\"",
+      "[2025-09-24 10:02:11] system_event: \"scheduled upload triggered\"",
+      "[2025-09-24 10:02:12] exfiltration_record (SIMULADO): \"logs.dat -> POST to 198.51.100.23:443, bytes=20480, protocol=HTTPS\"",
+      "[2025-09-24 10:02:13] exfiltration_record (SIMULADO): \"status=200 OK (simulado)\"",
+      "[2025-09-24 10:03:00] note: \"desvio de informacion inminete\""
+    ],
+    "file_hashes": {
+      "nosoyunkeylogger.dll": "f1e2d3c4b5a6978877665544332211aaff00bbccddeeff112233445566778899",
+      "logs.dat": "aa11bb22cc33dd44ee55ff6677889900aabbccddeeff00112233445566778899",
+      "Confidencial-Plan-2026.docx": "bb22cc33dd44ee55ff6677889900112233445566778899aabbccddeeff00112233"
+    },
+    "network_capture_reference": "pcap_STC-20250924-KL-3001.pcap (capturado y archivado)",
+    "memory_image_reference": "mem_host-soc-01_20250924_1005.dmp"
+  }
+}
